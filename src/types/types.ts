@@ -13,3 +13,7 @@ export interface IAuthProviderProps {
 export interface IProtectedRouteProps {
     children: ReactNode;
 }
+export type LoginInputs = {
+  email: string;
+  password: string;
+};

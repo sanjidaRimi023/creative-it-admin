@@ -1,17 +1,14 @@
 import { Navigate, useLocation } from "react-router";
 import { useAuth } from "../../hooks/useAuth";
 import type { IProtectedRouteProps } from "../../types/types";
+import SkeletonLoading from "./Skeleton";
 
 const ProtectedRoute = ({ children }: IProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center text-xl font-bold">
-        Loading...
-      </div>
-    );
+    return <SkeletonLoading/>
   }
 
   if (!user) {

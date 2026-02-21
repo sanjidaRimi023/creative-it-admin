@@ -3,8 +3,8 @@ import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import RootLayout from "../layouts/RootLayout";
 import DashboardHome from "../pages/Dashboard/DashboardHome";
-import Login from "../pages/Login";
 import ProjectsManage from "../pages/Projects/ProjectsManage";
+import Login from "../pages/Auth/Login";
 
 const router = createBrowserRouter([
   {
@@ -16,7 +16,7 @@ const router = createBrowserRouter([
         element: <Navigate to="/dashboard" replace />,
       },
       {
-        path: "sign-in",
+        path: "login",
         element: <Login />,
       },
       {
