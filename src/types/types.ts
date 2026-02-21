@@ -10,3 +10,6 @@ export interface IAuthContextType {
 export interface IAuthProviderProps {
     children : ReactNode
 }
+export interface IProtectedRouteProps {
+    children: ReactNode;
+}
