@@ -17,3 +17,23 @@ export type LoginInputs = {
   email: string;
   password: string;
 };
+
+//---- project ----
+export interface Project {
+  _id: string;
+  title: string;
+  description: string;
+  location: string;
+  liveLink: string;
+  image: string; // Changed from imageUrl to image
+  bgColor: string;
+}
+
+export interface ProjectFormInputs {
+  title: string;
+  description: string;
+  location: string;
+  liveLink: string;
+  image: FileList;
+  bgColor: string;
+}
