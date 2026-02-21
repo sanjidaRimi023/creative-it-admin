@@ -8,10 +8,10 @@ export interface IAuthContextType {
   logout: () => Promise<void>;
 }
 export interface IAuthProviderProps {
-    children : ReactNode
+  children: ReactNode;
 }
 export interface IProtectedRouteProps {
-    children: ReactNode;
+  children: ReactNode;
 }
 export type LoginInputs = {
   email: string;
@@ -36,4 +36,24 @@ export interface ProjectFormInputs {
   liveLink: string;
   image: FileList;
   bgColor: string;
+}
+
+// -----Testimonial----
+export interface Testimonial {
+  _id: string;
+  clientName: string;
+  review: string;
+  image: string;
+  location: string;
+  role: string;
+  country: string;
+}
+
+export interface TestimonialFormInputs {
+  clientName: string;
+  review: string;
+  image: FileList;
+  location: string;
+  role: string;
+  country: string;
 }
