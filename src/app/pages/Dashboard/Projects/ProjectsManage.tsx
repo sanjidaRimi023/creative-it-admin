@@ -15,10 +15,11 @@ import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
-import { Button } from "../../../components/ui/button";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
-import useAxiosSecure from "../../../hooks/useAxios";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Textarea } from "../../../../components/ui/textarea";
+import useAxiosSecure from "../../../../hooks/useAxios";
+import TableSkeleton from "../../../components/TableSkeleton";
 
 // Types
 interface Project {
@@ -78,6 +79,7 @@ const ProjectsManage = () => {
 
   useEffect(() => {
     fetchProjects();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit: SubmitHandler<ProjectFormInputs> = async (data) => {
@@ -314,9 +316,7 @@ const ProjectsManage = () => {
 
         <div className="p-6 flex-1 overflow-auto">
           {isFetching ? (
-            <div className="flex justify-center items-center h-40 text-muted-foreground">
-              Loading portfolio data...
-            </div>
+            <TableSkeleton />
           ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-border rounded-xl bg-sidebar/30 text-muted-foreground">
               <FolderKanban className="w-10 h-10 mb-2 opacity-20" />

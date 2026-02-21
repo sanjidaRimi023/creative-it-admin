@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "creative-hub-it-432",
+    "admin": "creative-hub-admin"
+  },
+  "targets": {},
+  "etags": {}
+}

@@ -5,12 +5,10 @@ import {
   type User,
   type UserCredential,
 } from "firebase/auth";
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "../config/firebase";
-import type { IAuthContextType, IAuthProviderProps } from "../types/types";
 import { AuthContext } from "../context/AuthContext";
-
-
+import type { IAuthContextType, IAuthProviderProps } from "../types/types";
 
 const AuthProvider = ({ children }: IAuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);

@@ -2,9 +2,11 @@ import { createBrowserRouter, Navigate } from "react-router";
 import ProtectedRoute from "../components/ProtectedRoute";
 import DashboardLayout from "../layouts/DashboardLayout";
 import RootLayout from "../layouts/RootLayout";
-import DashboardHome from "../pages/Dashboard/DashboardHome";
-import ProjectsManage from "../pages/Projects/ProjectsManage";
 import Login from "../pages/Auth/Login";
+import DashboardHome from "../pages/Dashboard/DashboardHome";
+import ProjectsManage from "../pages/Dashboard/Projects/ProjectsManage";
+import TeamManage from "../pages/Dashboard/Teams/TeamManage";
+import TestimonialManage from "../pages/Dashboard/Testimonials/TestimonialManage";
 
 const router = createBrowserRouter([
   {
@@ -37,11 +39,11 @@ const router = createBrowserRouter([
           },
           {
             path: "team",
-            element: <div>Team Management</div>,
+            element: <TeamManage />,
           },
           {
             path: "testimonials",
-            element: <div>Testimonials Management</div>, // Placeholder
+            element: <TestimonialManage />,
           },
         ],
       },
