@@ -1,40 +1,48 @@
+import axios from "axios";
+import {
+  Briefcase,
+  Globe,
+  ImageIcon,
+  MapPin,
+  MessageSquareQuote,
+  PlusCircle,
+  Trash2,
+  User as UserIcon,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
-import { MessageSquareQuote, Trash2, PlusCircle, Star, User as UserIcon, Briefcase } from "lucide-react";
-import useAxiosSecure from "../../../../hooks/useAxios";
+import toast from "react-hot-toast";
 import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Textarea } from "../../../../components/ui/textarea";
+import useAxiosSecure from "../../../../hooks/useAxios";
 import TableSkeleton from "../../../components/TableSkeleton";
+import type { Testimonial } from "../../../../types/types";
+import type { TestimonialFormInputs } from "../../../../types/types";
 
-
-// Types
-interface Testimonial {
-  _id: string;
-  clientName: string;
-  designation: string;
-  message: string;
-  rating: number;
-}
-
-interface TestimonialFormInputs {
-  clientName: string;
-  designation: string;
-  message: string;
-  rating: number;
-}
 
 const TestimonialManage = () => {
   const axiosSecure = useAxiosSecure();
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [isFetching, setIsFetching] = useState(true);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<TestimonialFormInputs>();
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setPreview(URL.createObjectURL(file));
+    }
+  };
 
   const fetchTestimonials = async () => {
     try {
@@ -50,91 +58,108 @@ const TestimonialManage = () => {
 
   useEffect(() => {
     fetchTestimonials();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onSubmit: SubmitHandler<TestimonialFormInputs> = async (data) => {
     try {
-      // Rating ta string theke number e convert kore nite hobe backend er jonno
-      await axiosSecure.post("/testimonials", { 
-        ...data, 
-        rating: Number(data.rating) 
-      });
-      
+      const file = data.image[0];
+      if (!file) return;
+
+      // 1. Image Upload
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", uploadPreset);
+
+      const cloudRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        formData,
+      );
+
+      // 2. Data Submission
+      const newTestimony = {
+        clientName: data.clientName,
+        review: data.review,
+        image: cloudRes.data.secure_url,
+        location: data.location,
+        role: data.role,
+        country: data.country,
+      };
+
+      await axiosSecure.post("/testimonials", newTestimony);
+
       fetchTestimonials();
       reset();
-      alert("Testimonial added successfully!");
+      setPreview(null);
+      toast.success("Review published!");
     } catch (error) {
       console.error(error);
-      alert("Failed to add testimonial");
+      toast.error("Failed to publish review");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this client review?")) return;
+    if (!window.confirm("Delete this review?")) return;
     try {
       await axiosSecure.delete(`/testimonials/${id}`);
       setTestimonials((prev) => prev.filter((t) => t._id !== id));
+      toast.success("Deleted successfully");
     } catch (error) {
       console.error(error);
     }
   };
 
   return (
-    <div className="flex flex-col xl:flex-row gap-8 h-full">
-      {/* ================= LEFT SIDE: TESTIMONIAL LIST ================= */}
+    <div className="flex flex-col xl:flex-row gap-8 h-full p-4 lg:p-0">
+      {/* ================= LEFT SIDE: LIST ================= */}
       <div className="xl:w-2/3 flex flex-col bg-background rounded-2xl border border-border shadow-sm overflow-hidden">
         <div className="p-6 border-b border-border bg-sidebar/50 flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
-              <MessageSquareQuote className="text-primary w-5 h-5" />
-              Client Reviews
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">Manage feedback and testimonials from your clients.</p>
-          </div>
-          <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-            {testimonials.length} Reviews
-          </div>
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <MessageSquareQuote className="text-primary w-5 h-5" />
+            Active Testimonials
+          </h2>
         </div>
 
-        <div className="p-6 flex-1 overflow-auto">
+        <div className="p-6 overflow-auto">
           {isFetching ? (
-           <TableSkeleton/>
-          ) : testimonials.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-border rounded-xl bg-sidebar/30 text-muted-foreground">
-              <MessageSquareQuote className="w-10 h-10 mb-2 opacity-20" />
-              <p>No testimonials found. Add one from the panel.</p>
-            </div>
+            <TableSkeleton />
           ) : (
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {testimonials.map((testi) => (
-                <div key={testi._id} className="p-5 border border-border rounded-xl flex justify-between gap-4 bg-sidebar/10 hover:border-primary/50 transition-colors">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-1 mb-2 text-amber-500">
-                      {[...Array(testi.rating)].map((_, i) => (
-                        <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
-                      ))}
-                    </div>
-                    <p className="text-sm italic text-foreground mb-3 line-clamp-2">"{testi.message}"</p>
+                <div
+                  key={testi._id}
+                  className="p-4 border border-border rounded-xl bg-sidebar/10 flex flex-col justify-between"
+                >
+                  <div className="flex justify-between items-start mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                        {testi.clientName.charAt(0)}
-                      </div>
+                      <img
+                        src={testi.image}
+                        className="w-10 h-10 rounded-lg object-cover"
+                        alt=""
+                      />
                       <div>
-                        <p className="font-semibold text-sm leading-none">{testi.clientName}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{testi.designation}</p>
+                        <p className="font-bold text-sm leading-none">
+                          {testi.clientName}
+                        </p>
+                        <p className="text-[10px] text-primary font-medium mt-1 uppercase">
+                          {testi.role}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-start">
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => handleDelete(testi._id)} 
-                      className="text-muted-foreground hover:text-red-600 hover:bg-red-50 h-8 w-8"
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(testi._id)}
+                      className="h-8 w-8 text-muted-foreground hover:text-red-600"
                     >
-                      <Trash2 size={16} />
+                      <Trash2 size={14} />
                     </Button>
+                  </div>
+                  <p className="text-xs italic text-muted-foreground line-clamp-2">
+                    "{testi.review}"
+                  </p>
+                  <div className="mt-3 pt-3 border-t flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                    <span>{testi.location}</span>
+                    <span>{testi.country}</span>
                   </div>
                 </div>
               ))}
@@ -143,75 +168,93 @@ const TestimonialManage = () => {
         </div>
       </div>
 
-      {/* ================= RIGHT SIDE: ADD FORM ================= */}
-      <div className="xl:w-1/3 bg-background rounded-2xl border border-border shadow-sm overflow-hidden h-fit sticky top-6">
+      {/* ================= RIGHT SIDE: FORM ================= */}
+      <div className="xl:w-1/3 bg-background rounded-2xl border border-border shadow-sm h-fit sticky top-6">
         <div className="p-6 border-b border-border bg-sidebar/50">
-          <h2 className="text-xl font-bold flex items-center gap-2 text-foreground">
+          <h2 className="text-xl font-bold flex items-center gap-2">
             <PlusCircle className="text-primary w-5 h-5" />
             Add Review
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">Publish a new client testimonial.</p>
         </div>
 
-        <div className="p-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-            
+        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+              <UserIcon size={14} /> Client Name
+            </label>
+            <Input
+              {...register("clientName", { required: true })}
+              placeholder="Jane Doe"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
-                <UserIcon size={14} /> Client Name
+              <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                <Briefcase size={14} /> Role
               </label>
               <Input
-                {...register("clientName", { required: "Name required" })}
-                placeholder="e.g., Jane Doe"
-                className="h-9"
+                {...register("role", { required: true })}
+                placeholder="CEO"
               />
-              {errors.clientName && <p className="text-red-500 text-[10px]">{errors.clientName.message}</p>}
             </div>
-
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
-                <Briefcase size={14} /> Designation / Company
+              <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+                <MapPin size={14} /> Location
               </label>
               <Input
-                {...register("designation", { required: "Designation required" })}
-                placeholder="e.g., CEO at TechCorp"
-                className="h-9"
+                {...register("location", { required: true })}
+                placeholder="TechCorp"
               />
-              {errors.designation && <p className="text-red-500 text-[10px]">{errors.designation.message}</p>}
             </div>
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
-                <Star size={14} /> Rating (1-5)
-              </label>
-              <Input
-                type="number"
-                min="1"
-                max="5"
-                {...register("rating", { required: "Rating required", min: 1, max: 5 })}
-                placeholder="5"
-                className="h-9"
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+              <Globe size={14} /> Country
+            </label>
+            <Input
+              {...register("country", { required: true })}
+              placeholder="USA"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+              <ImageIcon size={14} /> Client Image
+            </label>
+            <Input
+              type="file"
+              accept="image/*"
+              {...register("image", {
+                required: true,
+                onChange: handleImageChange,
+              })}
+            />
+            {preview && (
+              <img
+                src={preview}
+                className="w-full h-20 object-cover rounded-lg border mt-2"
+                alt="Preview"
               />
-              {errors.rating && <p className="text-red-500 text-[10px]">{errors.rating.message}</p>}
-            </div>
+            )}
+          </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold uppercase text-muted-foreground flex items-center gap-2">
-                <MessageSquareQuote size={14} /> Review Message
-              </label>
-              <Textarea
-                {...register("message", { required: "Message required" })}
-                placeholder="Client's review..."
-                className="resize-none h-24 text-sm"
-              />
-              {errors.message && <p className="text-red-500 text-[10px]">{errors.message.message}</p>}
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
+              <MessageSquareQuote size={14} /> Review
+            </label>
+            <Textarea
+              {...register("review", { required: true })}
+              placeholder="Review message..."
+              className="h-20"
+            />
+          </div>
 
-            <Button disabled={isSubmitting} type="submit" className="w-full font-semibold shadow-md">
-              {isSubmitting ? "Publishing..." : "Publish Review"}
-            </Button>
-          </form>
-        </div>
+          <Button disabled={isSubmitting} className="w-full font-bold">
+            {isSubmitting ? "Uploading..." : "Publish Review"}
+          </Button>
+        </form>
       </div>
     </div>
   );
